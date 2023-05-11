@@ -1,6 +1,6 @@
 
 const  Repository = require( '../Concrete/Repository');   
-const Tour = require('../models/tourModel');
+const Tours = require('../models/tourModel');
 const APIFeatures= require('../utils/apiFeatures');
 
     exports.aliasTopTours =(req,res,next)=>{
@@ -12,12 +12,12 @@ const APIFeatures= require('../utils/apiFeatures');
 
 
 //Route Handler
-exports. getAllTours = async (req,res) => {
-    console.log(`${req.requestTime} get all tours`)
+exports. getAllTours = async (req,res,next) => {
+    console.log(`${req.query.page} get all tours`)
     try{
-       
-   const paginate = Tour.paginate(req.query);
-    const tours = paginate;
+       const myInstance = new Tours(Tours.find(),req.query)
+   const tours = myInstance.paginate();
+  
     res.status(200).json({
         status: 'success',
         results: tours.length,
@@ -27,12 +27,7 @@ exports. getAllTours = async (req,res) => {
         
     });
 } catch(err){
-    res.status(400).json({
-        status: 'fail get all',
-        requestAt: req.requestTime,
-        message:err.errmsg
-        
-    });
+    next(err);
 }
 };
 exports. getById =  async (req,res,next)=> {  //getById
@@ -138,48 +133,17 @@ exports.getTourStats= async (req,res,next) => {
 exports.getMonthlyPlan= async (req,res )=> {
     try{
     const year=req.params.year *1;
-    const plan = await Tour.aggregate([
-   {
-    $unwind:'$startDates'
-   },
-   {
-    $match:{
-        startDates:{
-            $gte: new Date(`${year}-01-01`),
-            $lte: new Date(`${year}-12-31`)
-        }
-    }
-   },
-   {
-    $group:{
-        _id:{ $month :'$startDates'},
-        numToursStarts:{$sum:1},
-        tours :{$push:'$name'}
-    }
+      const repo= new Repository();
+     const plan = await repo.getMonthlyPlan(year);
 
-   },
-   {
-    $addFields: {month:'$_id'}
-   },
-   {
-    $project:{
-        _id:0
-    }
-   },
-   {
-    $sort:{numToursStarts: -1}
-   },
-   {
-    $limit:12
-   }
 
-    ]);
     res.status(200).json({
         status:'success',
         data:{
             plan
         }
      });
+    
     }
     catch(err){
       next(err);

@@ -1,7 +1,33 @@
 const mongoose =require('mongoose');
 const slugify= require('slugify');
 const validator= require('validator');
-const toursSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+
+
+class Pagination{
+  constructor(query,reqQuery)
+   {
+      this.query=query;
+      this.reqQuery=reqQuery;
+     
+   }
+   paginate(){
+
+    let page=2;
+       let limit= 5;
+       let skip =(page-1) * limit;
+
+      /*let page=this.reqQuery.page * 1|| 1;
+       let limit= this.reqQuery.limit * 1 || 100;
+       let skip =(page-1) * limit;*/
+       this.query=this.query;
+        
+        
+        return this;
+    }
+}
+const toursSchema= new Schema({
+
     name:{
       type:String,
       required:[true, 'A tour must have a name'],
@@ -67,13 +93,15 @@ const toursSchema = new mongoose.Schema({
     toObject:{virtuals:true}
     }
     
-    );
+    ).loadClass(Pagination);
+   
+
     toursSchema.virtual('durationWeeks').get(function(){ // virtual field lar için, db ye yansımayan
         return this.duration/7;
     });
     //DOCUMENT MIDDLEWARE : runs before only .save() or create() methods çok güzell yahu
-    toursSchema.pre('save',function(next){
-      console.log("sssssssssssssssssssss");
+  /*  toursSchema.pre('save',function(next){
+     
      this.slug=slugify(this.name,{lower:true});
      next();
     });
@@ -104,10 +132,12 @@ const toursSchema = new mongoose.Schema({
         this.pipeline().unshift({$match :{secretTour:{$ne:true}}});
         console.log(this.pipeline()); 
         next();
-       });
+       }); */
   
    
 
-  const Tour = mongoose.model('Tour',toursSchema);
+  const Tours = mongoose.model('Tours',toursSchema);
+
+
   
-module.exports=Tour;
+module.exports=Tours;
